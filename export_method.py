@@ -44,7 +44,7 @@ def main():
     tab = os.environ.get("BBB_METHOD_SHEET_ID", "")
     if not workbook or not tab.isdigit():
         parser.error("Set the existing BBB_SPREADSHEET_ID and numeric BBB_METHOD_SHEET_ID privately")
-    result = {"spreadsheet_id": workbook, "requests": build_requests(int(tab), metadata())}
+    result = {"spreadsheet_id": workbook, "requests": build_requests(int(tab), metadata(verify_remote=True))}
     text = json.dumps(result, indent=2)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)

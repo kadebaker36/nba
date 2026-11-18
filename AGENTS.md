@@ -1,6 +1,6 @@
 # Grounding for BBB Basketball
 
-Read `METHOD.md`, `docs/HANDOFF.md`, and the relevant dated examples before analysis or code changes. State the data cutoff and source revision. The user's current instructions take priority.
+Read `METHOD.md`, `docs/HANDOFF.md`, `docs/DATA_MAP.md`, and the relevant dated examples before analysis or code changes. State the data cutoff and source revision. If private configuration is absent, use the exact workbook-title and tab-fingerprint discovery in DATA_MAP before asking the user for a URL. The user's current instructions take priority.
 
 - `METHOD.md` is the canonical policy. The workbook Method tab is a generated mirror with a commit and content hash. Check both when refreshing; reconcile an approved sheet change before replacing it.
 - Analyze the full matchup: offense strength versus the defense's specific conceded opportunities. Separate total volume from shot quality. Read absolute rates and baseline differences beside percentiles. A single positive or negative statistic is not a qualification rule.

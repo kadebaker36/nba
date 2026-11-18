@@ -70,6 +70,21 @@ class ScreenerTests(unittest.TestCase):
         self.assertEqual(a["perimeter_vulnerability_pctile"], 100)
         self.assertEqual(a["dreb_weakness_pctile"], 0)
         self.assertEqual(a["three_volume_pctile"], 0)
+        self.assertEqual(a['own_three_pa_per100'], 20)
+        self.assertEqual(a['opponent_three_pa_allowed_per100'], 49)
+        self.assertAlmostEqual(a['illustrative_game_possessions'], (90+92.9)/2)
+        self.assertAlmostEqual(a['illustrative_three_pa'], 34.5*((90+92.9)/2)/100)
+
+    def test_rebounds_do_not_create_a_hidden_sort_or_qualification_score(self):
+        rows, _ = b.join_window(*self.tables(), set(range(30)))
+        games = [dict(game_id='0022600001', away_id=0, home_id=29, status='Scheduled')]
+        first = b.matchup_rows(games, {0:'AAA', 29:'BBB'}, 'current_season', rows)
+        rows[0]['oreb_pctile'], rows[29]['oreb_pctile'] = 100, 0
+        rows[0]['dreb_weakness_pctile'], rows[29]['dreb_weakness_pctile'] = 100, 0
+        second = b.matchup_rows(games, {0:'AAA', 29:'BBB'}, 'current_season', rows)
+        self.assertEqual([r['offense'] for r in first], ['AAA', 'BBB'])
+        self.assertEqual([r['offense'] for r in second], ['AAA', 'BBB'])
+        self.assertTrue(all('components_at_or_above_75' not in r and 'weakest_component' not in r for r in second))
 
     def test_date_boundaries(self):
         self.assertEqual(b.season_for(date(2026, 10, 22)), "2026-27")

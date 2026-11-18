@@ -254,7 +254,7 @@ def build_connections(schedule, cutoff, recent, windows, teams, raw_dir, get_jso
                 opp_second_chance_3pa_per100=100*opp["source_second_three_pa"]/poss if valid and poss else None,
                 assisted_3pm_per100=100*own["assisted_three_pm"]/poss if valid and poss else None,
                 opp_assisted_3pm_per100=100*opp["assisted_three_pm"]/poss if valid and poss else None,
-                note="Research only; wait for several weeks of current-season data")
+                note="Descriptive associations; apply the current method and report sample size")
             rows[tid] = row
         for metric in LINK_METRICS:
             values = {tid:r[metric] for tid,r in rows.items() if r[metric] is not None}
@@ -309,31 +309,38 @@ def build_connections(schedule, cutoff, recent, windows, teams, raw_dir, get_jso
 
 
 def render_connections(result, games, teams):
-    lines=["## Rebound-to-three associations and assisted-three context", "",
+    lines = ["## Supporting exports: Pass 3 and Pass 4", "",
         f"Current-season completed games validated: {result['validated_games']}/{result['expected_games']}. Failed games: {len(result['errors'])}.", "",
-        "Supporting context under METHOD.md: assists have provisional 5% influence and OREB at most 2.5%. These descriptive exports do not automatically change ordering or qualify a candidate.", "",
-        "OREB link = a personal offensive rebound followed by the next field-goal attempt before a turnover, free-throw trip, team-rebound boundary, or period end. Misses count. NBA second-chance tags are audited separately; absent tags do not discard valid sequences. This is a sequence, not proof of a direct pass.", "",
-        "Broader second-chance 3PA uses NBA's own 2ndchance qualifier and can include team rebounds. Assisted 3PM counts makes only; the passer on missed threes is unavailable. Both conceded rates use the defending team's own NBA possession denominator, matching its core per-100 convention.", ""]
-    for window, label in (("current_season","Current season"),("recent","Recent games")):
-        rows=result["windows"][window]
-        fmt=lambda x: "—" if x is None else str(round(x))
-        lines += [f"### {label}: matchup percentiles", "",
-            "Higher favors the offense. Missing ranks mean league coverage or an eligible denominator is incomplete; missing is not zero.", "",
-            "| Offense → opponent | OREB→3 rate | Opp OREB→3 conceded | 2nd-chance 3PA | Opp 2nd-chance 3PA | Assisted 3PM | Opp assisted 3PM |",
-            "|---|---:|---:|---:|---:|---:|---:|"]
-        for g in games:
-            for tid,oid in ((g['away_id'],g['home_id']),(g['home_id'],g['away_id'])):
-                o,d=rows[tid],rows[oid]
-                values=[o['oreb_next3_rate_pctile'],d['opp_oreb_next3_rate_pctile'],
-                        o['second_chance_3pa_per100_pctile'],d['opp_second_chance_3pa_per100_pctile'],
-                        o['assisted_3pm_per100_pctile'],d['opp_assisted_3pm_per100_pctile']]
-                lines.append(f"| {teams[tid]} → {teams[oid]} | "+" | ".join(map(fmt,values))+" |")
-        lines += ["", "### Raw counts on the slate", "",
-            "| Team | Validated/GP | Next 3PA / personal OREB | Opp next 3PA / OREB | NBA 2nd-chance 3PA | Assisted 3PM | Opp assisted 3PM |",
-            "|---|---:|---:|---:|---:|---:|---:|"]
-        for tid in sorted({g[k] for g in games for k in ('home_id','away_id')},key=lambda t:teams[t]):
-            r=rows[tid]
-            lines.append(f"| {teams[tid]} | {r['games_validated']}/{r['gp']} | {fmt(r['next3_after_oreb'])}/{fmt(r['personal_oreb'])} | {fmt(r['opponent_next3_after_oreb'])}/{fmt(r['opponent_personal_oreb'])} | {fmt(r['source_second_chance_3pa'])} | {fmt(r['assisted_3pm'])} | {fmt(r['opponent_assisted_3pm'])} |")
+        "Pass 2 tracking and schedule adjustment require separate outputs. These supporting exports do not complete it or qualify a candidate.", ""]
+    rate = lambda x: "—" if x is None else f"{x:.2f}"
+    rank = lambda x: "—" if x is None else str(round(x))
+    for window, label in (("current_season", "Current season"), ("recent", "Recent team games")):
+        rows = result["windows"][window]
+        lines += [f"### Pass 3 · {label}: three-point assist context (5%)", "",
+            "Assisted makes depend on conversion. They are not catch-and-shoot attempts or potential assists. Passers on misses remain unavailable.", "",
+            "| Offense → opponent | Own assisted 3PM/100 (P) | Opp assisted 3PM allowed/100 (P) | Validated games O/D |",
+            "|---|---:|---:|---:|"]
+        for game in games:
+            for tid, oid in ((game['away_id'], game['home_id']), (game['home_id'], game['away_id'])):
+                own, defense = rows[tid], rows[oid]
+                lines.append(f"| {teams[tid]} → {teams[oid]} | {rate(own['assisted_3pm_per100'])} (P{rank(own['assisted_3pm_per100_pctile'])}) | "
+                    f"{rate(defense['opp_assisted_3pm_per100'])} (P{rank(defense['opp_assisted_3pm_per100_pctile'])}) | "
+                    f"{own['games_validated']}/{own['gp']} · {defense['games_validated']}/{defense['gp']} |")
         lines += [""]
-    lines += ["Team/window rates and counts: connection_team_windows.csv. Individual rebound/shooter links: rebound_shooter_pairs.csv. Made-three assist links: assist_shooter_pairs.csv. Every OREB boundary and outcome: rebound_event_audit.csv. Box-score reconciliation: connection_validation.csv. Failures: connection_errors.json.", ""]
+    for window, label in (("current_season", "Current season"), ("recent", "Recent team games")):
+        rows = result["windows"][window]
+        lines += [f"### Pass 4 · {label}: rebound tiebreaker (at most 2.5%)", "",
+            "An OREB link is a sequence to the next shot, not proof of a direct pass. Misses count. Missing NBA second-chance tags do not erase valid reconstructed sequences. Broader NBA-tagged second-chance attempts remain separate.", "",
+            "| Offense → opponent | Own second-chance 3PA/100 (P) | Opp second-chance 3PA allowed/100 (P) | Own immediate next-3PA / OREB | Opp next-3PA / OREB |",
+            "|---|---:|---:|---:|---:|"]
+        for game in games:
+            for tid, oid in ((game['away_id'], game['home_id']), (game['home_id'], game['away_id'])):
+                own, defense = rows[tid], rows[oid]
+                lines.append(f"| {teams[tid]} → {teams[oid]} | {rate(own['second_chance_3pa_per100'])} (P{rank(own['second_chance_3pa_per100_pctile'])}) | "
+                    f"{rate(defense['opp_second_chance_3pa_per100'])} (P{rank(defense['opp_second_chance_3pa_per100_pctile'])}) | "
+                    f"{rank(own['next3_after_oreb'])}/{rank(own['personal_oreb'])} | "
+                    f"{rank(defense['opponent_next3_after_oreb'])}/{rank(defense['opponent_personal_oreb'])} |")
+        lines += [""]
+    lines += ["Use rebound support only where this matchup supports more second-chance threes than the offense's usual baseline. No automatic rebound or assist bonus is applied.", "",
+        "Full raw rates, coverage, counts and available percentiles: connection_team_windows.csv. Observed passer/shooter makes: assist_shooter_pairs.csv. Rebound sequences: rebound_shooter_pairs.csv and rebound_event_audit.csv. Reconciliations and failures: connection_validation.csv and connection_errors.json.", ""]
     return "\n".join(lines)

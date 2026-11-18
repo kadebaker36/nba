@@ -14,7 +14,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 from method_policy import grounded_header, metadata
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 METRICS = ("three_volume", "shooting", "oreb", "perimeter_vulnerability", "dreb_weakness", "pace")
 HEADERS = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.nba.com/",
            "Origin": "https://www.nba.com", "Accept": "application/json, text/plain, */*"}
@@ -185,16 +185,28 @@ def matchup_rows(games, teams, window, stats):
                 source = defense if metric in ("perimeter_vulnerability", "dreb_weakness") else off
                 row[metric + "_pctile"] = source.get(metric + "_pctile") if source else None
             row["opponent_pace_pctile"] = defense.get("pace_pctile") if defense else None
-            core = [row[k + "_pctile"] for k in METRICS if k != "pace"]
-            valid = all(v is not None for v in core)
-            row["components_at_or_above_75"] = sum(v >= 75 for v in core) if valid else None
-            row["weakest_component"] = min(core) if valid else None
+            row.update(
+                own_three_pa_per100=off["three_volume"] if off else None,
+                own_three_pct=off["shooting"] if off else None,
+                opponent_three_pa_allowed_per100=defense["perimeter_vulnerability"] if defense else None,
+                own_pace=off["pace"] if off else None,
+                opponent_pace=defense["pace"] if defense else None,
+            )
+            # A transparent opportunity illustration, not a fitted forecast or qualification score.
+            possessions = (off["pace"] + defense["pace"]) / 2 if off and defense else None
+            attempts = ((off["three_volume"] + defense["perimeter_vulnerability"]) / 2
+                        * possessions / 100) if possessions is not None else None
+            baseline = off["three_volume"] * off["pace"] / 100 if off else None
+            row.update(illustrative_game_possessions=possessions,
+                       illustrative_three_pa=attempts,
+                       own_baseline_three_pa=baseline,
+                       illustrative_three_pa_change=attempts-baseline if attempts is not None else None)
             row["sample_note"] = ("Prior-season context; verify roster/role changes" if window == "prior_season"
                                   else "Thin sample (<10 games)" if min(row["offense_gp"], row["opponent_gp"]) < 10
                                   else "Descriptive team environment; player check required")
             rows.append(row)
-    return sorted(rows, key=lambda r: (-(r["components_at_or_above_75"] if r["components_at_or_above_75"] is not None else -1),
-                                       -(r["weakest_component"] if r["weakest_component"] is not None else -1), r["offense"]))
+    # Retain schedule order and both directions. An unweighted metric count is not our method.
+    return rows
 
 
 def write_csv(path, rows):
@@ -215,33 +227,28 @@ def report(day, cutoff, season, recent, windows, health, matches):
         f"Regular season only. Results through {cutoff.isoformat()}; excludes all games on the slate date.", "",
         "Higher percentiles always favor the offense's three-point environment. These are league ranks, not hit probabilities.", "",
         "This is a team watchlist, not a player prop recommendation. Injuries, rotations, and shot-location matchups have not been reviewed.", "",
-        "Legacy research ordering: count of five non-pace components at/above the 75th percentile, then weakest component. This is not final qualification or a fitted score. Apply METHOD.md and assess volume and shot quality separately.", ""]
+        "Schedule order only; no automatic qualification score. Pass 1 pairs offensive volume and accuracy with opponent attempt concessions. Apply METHOD.md and assess shot quality separately in Pass 2.", ""]
     lines.insert(2, grounded_header())
-    for window, label in (("prior_season", "Prior-season baseline"), ("current_season", "Current season"), ("recent", f"Recent: last {recent} games")):
+    for window, label in (("current_season", "Current season"), ("recent", f"Recent: last {recent} games"), ("prior_season", "Prior-season baseline")):
         h = health[window]
         lines += [f"## {label}", "", f"Season {windows[window]['season']}; teams with games: {h['teams_with_games']}/30; minimum GP: {h['min_gp']}.", ""]
         if not h["league_percentiles_available"]:
             lines += ["League percentiles withheld: all 30 teams must have games in the window. See raw team rates below or in team_windows.csv.", ""]
-        lines += ["| Offense vs defense | GP O/D | 3PA | 3P% | OREB | Opp 3PA allowed | Opp DREB weakness | Pace O/D | ≥75 components |",
-                  "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
+        lines += ["| Offense vs defense | GP O/D | Own 3PA/100 (P) | Own 3P% (P) | Opp 3PA allowed/100 (P) | Pace O/D | Approx. possessions | Approx. 3PA / own baseline |",
+                  "|---|---:|---:|---:|---:|---:|---:|---:|"]
         for row in matches[window]:
-            v = [fmt(row[m + "_pctile"]) for m in METRICS]
+            rate = lambda v: "—" if v is None else f"{v:.1f}"
+            pct = lambda v: "—" if v is None else f"{v:.1%}"
             lines.append(f"| {row['offense']} vs {row['opponent']} ({row['venue']}) | {row['offense_gp']}/{row['opponent_gp']} | "
-                         + " | ".join(v[:5]) + f" | {v[5]}/{fmt(row['opponent_pace_pctile'])} | {fmt(row['components_at_or_above_75'])} |")
-        lines += [""]
+                         f"{rate(row['own_three_pa_per100'])} (P{fmt(row['three_volume_pctile'])}) | "
+                         f"{pct(row['own_three_pct'])} (P{fmt(row['shooting_pctile'])}) | "
+                         f"{rate(row['opponent_three_pa_allowed_per100'])} (P{fmt(row['perimeter_vulnerability_pctile'])}) | "
+                         f"{rate(row['own_pace'])}/{rate(row['opponent_pace'])} | {rate(row['illustrative_game_possessions'])} | "
+                         f"{rate(row['illustrative_three_pa'])}/{rate(row['own_baseline_three_pa'])} |")
+        lines += ["", "Opportunity illustration: mean team pace × mean(own 3PA/100, opponent allowed 3PA/100) / 100. Own baseline uses own pace and attempt rate. This is not a fitted forecast, a makes projection or a second pace bonus. Missing percentile = unavailable league coverage.", ""]
         if window != "prior_season":
             if h["min_gp"] < 10:
                 lines += ["Thin sample: fewer than 10 games for at least one reporting team. Recent and season windows overlap; they are not independent confirmations.", ""]
-            lines += ["| Team on slate | GP | 3PA/100 | 3P% | OREB% | Opp 3PA/100 | DREB% | Pace |", "|---|---:|---:|---:|---:|---:|---:|---:|"]
-            ids = sorted({r["offense"] for r in matches[window]})
-            by_code = {r["abbreviation"]: r for r in windows[window]["rows"].values()}
-            for code in ids:
-                r = by_code.get(code)
-                if r is None:
-                    lines.append(f"| {code} | 0 | — | — | — | — | — | — |")
-                else:
-                    lines.append(f"| {code} | {r['gp']} | {r['three_volume']:.1f} | {r['shooting']:.1%} | {r['oreb']:.1%} | {r['perimeter_vulnerability']:.1f} | {r['dreb_pct']:.1%} | {r['pace']:.1f} |")
-            lines += [""]
     lines += ["## Interpretation", "", "Prior-season rankings describe the old roster and coaching context. They are shown separately, never silently blended into this season.", "",
         "Opponent 3PA allowed is a volume-concession measure, not a complete measure of perimeter defense. Shooting is observed team 3P%, not a roster-adjusted talent estimate.", "",
         "OREB and weak opponent DREB indicate support. The association layer below separately measures reconstructed next-shot links and NBA-tagged second-chance threes; it does not label all of them direct kick-outs.", "",

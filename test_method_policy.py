@@ -1,8 +1,13 @@
 """Protect workbook state when regenerating policy and provenance."""
 import unittest
+import os
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+from io import BytesIO
 
 from export_method import build_requests
-from method_policy import sheet_rows
+from method_policy import sheet_rows, metadata
 
 
 class MethodMirrorTests(unittest.TestCase):
@@ -24,6 +29,28 @@ class MethodMirrorTests(unittest.TestCase):
     def test_uncommitted_method_cannot_be_exported_as_authoritative(self):
         with self.assertRaises(ValueError):
             build_requests(123, {"method_committed": False, "method_commit": None})
+
+    def test_declared_commit_alone_cannot_certify_downloaded_content(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'METHOD.md'
+            path.write_text('Changed policy')
+            with patch.dict(os.environ, {'BBB_METHOD_COMMIT': 'a'*40}):
+                info = metadata(path)
+                self.assertFalse(info['method_committed'])
+                with self.assertRaises(ValueError):
+                    build_requests(123, info)
+                with patch('method_policy.urllib.request.urlopen', return_value=BytesIO(b'Original policy')):
+                    with self.assertRaises(ValueError):
+                        metadata(path, verify_remote=True)
+                with patch('method_policy.urllib.request.urlopen', return_value=BytesIO(b'Changed policy')):
+                    self.assertTrue(metadata(path, verify_remote=True)['method_committed'])
+
+    def test_policy_cannot_overwrite_a_snapshot_row(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'METHOD.md'
+            path.write_text('## Coverage\n<!-- sheet-row: 8 -->\n\nAccidental overwrite\n')
+            with self.assertRaises(ValueError):
+                sheet_rows(path)
 
 
 if __name__ == "__main__":

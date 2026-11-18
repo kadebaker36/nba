@@ -39,7 +39,7 @@ League midranks: 100 × (average ascending rank − 1) / 29. All 30 eligible tea
 ## Ordering
 <!-- sheet-row: 14 -->
 
-The Matchups tab counts five non-pace components at or above 75, then breaks ties by weakest component and team. For big-slate Pass 1, rank the volume and pace read separately. This sorter generates research candidates only. Final selection must reflect all completed passes. A high initial rank does not guarantee advancement.
+Automated exports retain schedule order and display both directions; they do not rank candidates by a count of high-percentile components. Retired component counts in older Matchups snapshots are diagnostic history only and must not drive selection. Rank theses analytically from the combined pass evidence, with own accuracy, volume, pace and specific defensive concessions visible. A high initial rank does not guarantee advancement.
 
 ## Windows
 <!-- sheet-row: 15 -->
@@ -54,7 +54,7 @@ Last 10 differs from season totals for teams with more than 10 games. The sample
 ## Sample size
 <!-- sheet-row: 17 -->
 
-Fewer than 10 team games flagged thin. Research only until several weeks of current-season data.
+Flag fewer than 10 team games as thin and report early-season uncertainty and overlapping windows. This is a descriptive sample flag, not a permanent calendar restriction or a validated qualification threshold.
 
 ## OREB link
 <!-- sheet-row: 18 -->
@@ -104,7 +104,7 @@ Context only. Raw opponent 3P% and 3PM allowed never earn a first-pass perimeter
 ## Perimeter shot quality
 <!-- sheet-row: 32 -->
 
-Trial metric: wide-open opponent 3PA (6+ ft) per 100 tracked possessions. Show open 3PA (4–6 ft) separately.
+Trial metric: wide-open opponent 3PA (6+ ft) per 100 tracked possessions. Show open 3PA (4–6 ft) separately. These are opportunity proxies, not comprehensive defensive grades or shooter/location-adjusted predictions. Conceded looks must fit the actual offensive shooters before claiming exploitability.
 
 ## Tracking & player fit
 <!-- sheet-row: 33 -->
@@ -124,7 +124,7 @@ Screen the full slate. Show team 3PA and opponent 3PA allowed per 100, with raw 
 ## Big slate · 2. Shot quality
 <!-- sheet-row: 36 -->
 
-Run the schedule adjustment in rows 39–42 before advancing teams. Show tracked expected 3PM allowed, the opponent baseline and the difference per 100. Show expected make rate per attempt, actual minus expected, and open and wide-open attempt rates separately. Reassess each candidate as Advance, Watchlist or Reject. Later contradictory evidence must change the decision when it weakens the thesis. Apply the core qualification rule in row 51 before advancement.
+Run the schedule adjustment in rows 39–42 before advancing teams. Show tracked expected 3PM allowed, the opponent baseline and the difference per 100. Show expected make rate per attempt, actual minus expected, and open and wide-open attempt rates separately. Reassess each candidate as Advance, Watchlist or Reject. Record how contradictory evidence changes the overall assessment, and change status when the combined evidence warrants it. Apply the core qualification rule in row 51 before advancement.
 
 ## Big slate · 3. Assist creation
 <!-- sheet-row: 37 -->
@@ -149,7 +149,7 @@ For each offense faced, calculate expected 3PM per 100 from its tracked games ag
 ## Pass 2 · Schedule adjustment
 <!-- sheet-row: 41 -->
 
-Subtract each offense’s baseline from what the defense allowed per 100 against it, then average the differences weighted by possessions against each offense. Positive means the defense allowed more expected threes than its opponents usually generated.
+Subtract each offense’s baseline from what the defense allowed per 100 against it, then average the differences weighted by possessions against each offense. Positive means the defense allowed more expected threes than its opponents usually generated. Decompose the adjustment into volume and shot-mix contributions before interpretation; expected makes per 100 combine both. Do not count the volume component again as an independent quality advantage.
 
 ## Pass 2 · Report coverage
 <!-- sheet-row: 42 -->
