@@ -160,6 +160,13 @@ class ReviewGuardTests(unittest.TestCase):
         self.review['players'] = []
         self.assertEqual(self.codes(), set())
 
+    def test_unknown_phase_cannot_bypass_final_checks(self):
+        self.assertEqual(validate(self.ledger, self.review, self.root, 'typo')[0]['code'], 'phase')
+
+    def test_physical_make_attempt_bounds(self):
+        self.review['players'][0]['stretch_makes_band'] = [4, 7]
+        self.assertIn('range_physics', self.codes())
+
     def test_nonfinite_and_duplicate_json_rejected(self):
         for raw in ['{"a":NaN}', '{"a":1,"a":2}', '{"a":1e999}']:
             (self.root/'bad.json').write_text(raw)

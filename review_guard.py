@@ -44,7 +44,11 @@ def comparable(evidence, team, player_id, cutoff, present=(), absent=()):
     if type(player_id) is not int or any(type(x) is not int for x in (*present, *absent)):
         raise ValueError('Player/condition IDs must be integers')
     games = evidence[team]['rotations']
-    known = {p['id'] for g in games for p in g['players']}
+    known = set()
+    for game in games:
+        date.fromisoformat(game['date'])
+        if game['date'] <= cutoff:
+            known.update(p['id'] for p in game['players'])
     if player_id not in known or not set(present).union(absent) <= known:
         raise ValueError('Unknown player/condition ID in this evidence')
     if set(present) & set(absent) or player_id in set(present).union(absent):
@@ -93,6 +97,8 @@ def has_dimension(data, dimension):
 
 
 def validate(ledger, review, root, phase='final'):
+    if phase not in ('draft', 'final'):
+        return [dict(code='phase', where='root', message='Unknown review phase; approval checks not bypassed.')]
     issues = []
     root = Path(root).resolve()
     def fail(code, where, message):
@@ -261,6 +267,11 @@ def validate(ledger, review, root, phase='final'):
             band = player.get(field)
             if not isinstance(band, list) or len(band) != 2 or not all(number(x) for x in band) or not 0 <= band[0] <= band[1]:
                 fail('range_bounds', where, f'Invalid or missing {field}.')
+        attempts = player.get('attempts_band')
+        for field in ('conservative_makes_band', 'stretch_makes_band'):
+            band = player.get(field)
+            if isinstance(attempts, list) and len(attempts) == 2 and number(attempts[1]) and isinstance(band, list) and len(band) == 2 and number(band[1]) and band[1] > attempts[1]:
+                fail('range_physics', where, 'Makes exceed the declared scenario attempt band; include any stretch volume explicitly.')
     if set(finalists) != {p.get('candidate') for p in players if isinstance(p, dict)}:
         fail('player_coverage', 'review', 'Each finalist needs player review; remove unsupported finalists rather than fill quotas.')
     audit = review.get('audit', {})
