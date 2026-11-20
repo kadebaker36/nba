@@ -1,5 +1,7 @@
 # Daily NBA launch and four-role bootstrap
 
+Legacy protocol. The active research setup is [one cloud Worker and one focused Auditor](LEAN_DAILY_WORKFLOW.md), using `lean_roles.json`. Do not launch the four-role team for daily research. The schedule planner and its existing compatibility checks remain usable independently.
+
 This is a local stdlib planner and a hosted-team bootstrap protocol. These files create **no deployed scheduling, automation task, Sheets writer, external model API service or infrastructure**. Root owns real scheduling, private task IDs and publication. Routine public NBA ingestion, refresh of the existing workbook and analysis are standing authorized under the user's current instruction; there is no repeated human launch hold. Actual writes require verified capabilities and bounded Supervisor orders. A refresh-only request still stops after refresh, as METHOD.md requires.
 
 ## Plan an explicit Chicago slate
