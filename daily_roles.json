@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "creates_scheduler": false,
+  "creates_sheet_writer": false,
+  "roles": {
+    "Admin": {"model": "gpt-6.1-sol", "reasoning_effort": "medium", "fork_turns": "none"},
+    "Codex": {"model": "gpt-6.1-sol", "reasoning_effort": "medium", "fork_turns": "none"},
+    "Supervisor": {"model": "gpt-6.1-sol", "reasoning_effort": "high", "fork_turns": "none"},
+    "Bridge": {"model": "gpt-6-luna", "reasoning_effort": "low", "fork_turns": "none"}
+  }
+}

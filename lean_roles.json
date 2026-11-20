@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "roles": {
+    "Worker": {"model": "gpt-6.1-sol", "reasoning_effort": "medium", "fork_turns": "none"},
+    "Auditor": {"model": "gpt-6.1-sol", "reasoning_effort": "high", "fork_turns": "none"}
+  },
+  "execution": "hosted_cloud_only",
+  "audit_rounds": 1,
+  "correction_rounds": 1,
+  "weights_are": "provisional judgment allowances, not fitted scoring coefficients"
+}
