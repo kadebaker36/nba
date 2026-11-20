@@ -18,6 +18,8 @@ Name roles BBB - YYYY-MM-DD - Worker and BBB - YYYY-MM-DD - Auditor, using the a
 
 ## Sequential pass contract
 
+Apply the executable [review guard](REVIEW_GUARD.md) at draft and final acceptance. It requires candidate-specific supporting-pass comparisons, measured-or-unverified fit labels, recomputed rotation samples and explicit range baselines. Exact generic carry-forward reasoning is rejected; unchanged decisions remain legitimate when justified.
+
 Complete each row before proceeding to the next. A compact pass ledger must contain: stage, completed/partial/blocked status, cutoff and window, actual source reference, raw figures and units, eligible sample, percentiles when supported, offense strength, specific defensive concession, strongest contradiction, Advance/Watchlist/Reject decision, and the reason for each change from the previous pass. For a missing field or source, record the gap and its effect rather than marking the pass completed. A pass name or a checkbox alone is insufficient evidence.
 
 | Order | Required attention and output | Influence |
@@ -44,6 +46,8 @@ NBA LastNGames plus DateTo can return fewer than the actual last ten completed g
 Keep one compact private date-keyed checkpoint with source manifests/data references, pass ledger, report draft, audit status and pending writes. Save meaningful progress before expensive continuation and reconcile live state after uncertain writes. Save the reproducible data package once when needed, not a new transcript bundle for every message. Scratch paths are temporary. Never put private workbook IDs, picks or saved-file IDs in public Git.
 
 ## Audit and delivery
+
+Auditor must argue rejection of each finalist and promotion of the strongest Watchlist alternative, with source evidence and an answer. Separate data/reasoning verdicts from workbook-publication and visual review. Run `review_guard.py` on the private ledger/review manifest: draft before audit, final after audit. A structural pass never replaces the independent semantic checks; a failed final gate must be disclosed and cannot be labelled fully approved.
 
 Auditor must independently check dated source identity, actual windows, coverage, units, percentage scaling, sample/denominator handling and material source calculations. It checks all pass-ledger rows against evidence, schedule adjustment execution, no double-counting, the 92.5/5/max2.5 hierarchy, decision transitions, no forced shortlist, availability assumptions and each selected player's defensible ranges. It flags any unperformed pass, unsupported percentile, stale source, unlabelled partial or source mismatch. Access failure means audit incomplete, not acceptance.
 
