@@ -29,6 +29,8 @@ Dates above are examples. `--date` defaults to today in America/Chicago; each ru
 
 These commands produce local data, audits and reports. They do not automatically select final candidates, research availability, project player roles, or edit the Google Sheet. Follow [the refresh procedure](docs/REFRESH.md) to complete those steps and preserve workbook state.
 
+For an explicit Chicago first-tip launch plan, exact hosted role profiles and daily recovery protocol, see [daily workflow](docs/DAILY_WORKFLOW.md). These local files create no deployed scheduling or Sheets writer.
+
 ## One authoritative method
 
 Edit `METHOD.md` in Git. From the committed checkout, configure the existing workbook privately and export the exact mirror payload:
